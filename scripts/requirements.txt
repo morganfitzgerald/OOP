@@ -1,0 +1,30 @@
+# Name                    Version                     
+        
+matplotlib==3.8.3
+                 
+matplotlib-inline==0.1.6     
+
+            
+neurokit2 == 0.2.7  
+            
+numpy==1.26.4    
+             
+scikit-learn==1.2.2  
+      
+scipy==1.9.3     
+           
+statsmodels==0.14.0 
+              
+bycycle==1.1.0   
+                     
+ipykernel==6.9.1  
+          
+ipython==8.22.2                      
+                                        
+python==3.10.12  
+
+pandas==1.5.3               
+                
+spectrum==0.8.1                        
+             
+  
