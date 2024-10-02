@@ -1,6 +1,6 @@
 # ECG_tool_validation
 
-This repository provides a robust pipeline for processing and analyzing ECG (Electrocardiogram) signals. The tool is designed to automate key stages of ECG analysis, making it easier to extract meaningful features and calculate heart rate variability (HRV) metrics. This pipeline is particularly useful for researchers and practitioners who need a streamlined approach to process ECG data efficiently.
+This repository provides a pipeline for processing and analyzing electrocardiogram waveform shapes. The tool is the first to capture several ECG wavform shape features on a beat-to-beat basis.
 
 ## Key Features
 
