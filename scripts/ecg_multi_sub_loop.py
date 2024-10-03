@@ -28,6 +28,7 @@ from src.analysis import find_extremum, calc_fwhm, find_peak_boundaries, calc_r_
 
 from src.gaussian import gaussian_function, compute_gauss_std
 
+
 # ### Global Attributes
 fs = 1000
 sampling_rate = fs
@@ -184,6 +185,7 @@ def process_subject(SUB_NUM, dat_path, hea_path, results_dir):
             # Use cycle_idx instead of cycle for assignments
             for comp, params in component_inds.items():
                 onset, offset = find_peak_boundaries(sig, peak_index=params[0], peak_height=params[1])
+
                 ecg_output_dict[f'{comp}_on'][cycle_idx] = xs[onset] if onset is not None else np.nan
                 ecg_output_dict[f'{comp}_off'][cycle_idx] = xs[offset] if offset is not None else np.nan
 
@@ -191,6 +193,7 @@ def process_subject(SUB_NUM, dat_path, hea_path, results_dir):
                 short_side = min(abs(params[0] - onset), abs(offset - params[0])) if onset is not None and offset is not None else 0
                 fwhm = short_side * 2
                 guess_std = compute_gauss_std(fwhm)
+
                 guess = np.vstack((guess, (params[2], params[1], guess_std)))
 
             # Extract components and calculate bounds
@@ -301,9 +304,9 @@ def process_subject(SUB_NUM, dat_path, hea_path, results_dir):
 
 # Main execution block
 if __name__ == "__main__":
-    dir_path = '/Users/morganfitzgerald/Projects/ECGtoolbox/data/AutoAge_data/raw'
+    dir_path = '/Users/morganfitzgerald/Projects/ECG_tool_val/data/AutoAge_data/raw'
     files_dat_dict, files_hea_dict = create_subject_file_mapping(dir_path)
-    results_dir = '/Users/morganfitzgerald/Projects/ECGtoolbox/saved_files/timedomain_results'
+    results_dir = '/Users/morganfitzgerald/Projects/ECG_tool_val/saved_files/timedomain_results'
 
     subject_args = [
         (SUB_NUM, dat_path, files_hea_dict[SUB_NUM], results_dir)
