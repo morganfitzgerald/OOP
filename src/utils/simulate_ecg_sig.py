@@ -1,9 +1,7 @@
 import neurokit2 as nk
 import numpy as np
 
-
-# Function to simulate ECG signal using neurokit2
-def simulate_ecg_signal(
+def simulate_ecg_sig(
     duration=5, sampling_rate=1000, heart_rate=80, amplitude_factor=1.0, normalize=False
 ):
     """
@@ -17,22 +15,19 @@ def simulate_ecg_signal(
     - normalize (bool): Whether to normalize the ECG signal or not.
 
     Returns:
-    - scaled_ecg (numpy.ndarray): Simulated ECG signal with the specified parameters.
+    - simulated_ecg (numpy.ndarray): Simulated ECG signal with the specified parameters.
     """
-
-    # Use neurokit2 to simulate an ECG signal
+    # Simulate the ECG signal with neurokit2
     ecg_signal = nk.ecg_simulate(
         duration=duration, sampling_rate=sampling_rate, heart_rate=heart_rate
     )
 
-    # Scale the ECG signal by the specified amplitude factor
-    simulated_ecg = ecg_signal * amplitude_factor
+    # Apply amplitude scaling
+    ecg_signal *= amplitude_factor
 
-    # Normalize the ECG signal if specified
+    # Apply normalization if specified
     if normalize:
-        simulated_ecg = (simulated_ecg - np.min(simulated_ecg)) / (
-            np.max(simulated_ecg) - np.min(simulated_ecg)
-        )
+        ecg_min, ecg_max = np.min(ecg_signal), np.max(ecg_signal)
+        ecg_signal = (ecg_signal - ecg_min) / (ecg_max - ecg_min)
 
-    # Return the scaled or normalized ECG signal
-    return simulated_ecg
+    return ecg_signal

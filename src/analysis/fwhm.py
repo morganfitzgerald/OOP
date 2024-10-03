@@ -1,5 +1,5 @@
 
-def estimate_fwhm(le_ind, ri_ind, center_index):
+def calc_fwhm(le_ind, ri_ind, center_index):
     """
     Estimate the Full-Width Half-Maximum (FWHM) of a peak based on its left and right indices at half maximum.
     

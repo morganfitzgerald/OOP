@@ -1,4 +1,6 @@
 import numpy as np
+
+
 def find_extremum(signal, xs, start_idx, end_idx, mode):
     """
     Finds the index and value of the minimum or maximum in a specified segment of a signal array,
