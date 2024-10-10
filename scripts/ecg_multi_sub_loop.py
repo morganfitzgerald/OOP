@@ -18,15 +18,7 @@ from scipy.signal import detrend, butter, iirnotch, filtfilt
 from scipy.optimize import curve_fit
 
 # Custom imports
-from src.utils import create_subject_file_mapping, extract_data, extract_metadata, simulate_ecg_sig, epoch_cycles
-
-from src.template import match_ecg_template
-
-from src.feature import nk_peaks, find_peak_params, calc_shape_params, calc_bounds, extract_peak_indices
-
-from src.analysis import find_extremum, calc_fwhm, find_peak_boundaries, calc_r_squared
-
-from src.gaussian import gaussian_function, compute_gauss_std
+...
 
 
 # ### Global Attributes
@@ -92,7 +84,7 @@ def process_subject(SUB_NUM, dat_path, hea_path, results_dir):
         p_peaks_nk, _, _ = nk_peaks(ecg_clean_nk, sampling_rate)
 
         # Epoch cycles
-        epochs_df, result_r_latencies = epoch_cycles(p_peaks_nk, ecg_notch, fs, SUB_NUM, PLOT=False, SAVE=False)
+        epochs_df = epoch_cycles(p_peaks_nk, ecg_notch, fs, SUB_NUM, PLOT=False, SAVE=False)
 
         # PARAMETERIZATION: Process the data (as per your existing logic)
         print(f"Starting parameterization for {SUB_NUM}")
@@ -151,7 +143,7 @@ def process_subject(SUB_NUM, dat_path, hea_path, results_dir):
             r_center = xs[r_ind]
 
             # Find indices for onset and offset of R peak
-            le_ind_r, ri_ind_r = find_peak_boundaries(sig, r_ind, peak_height=r_height)
+            le_ind_r, ri_ind_r = extract_peak_indices(sig, r_ind, peak_height=r_height)
             fwhm_r = calc_fwhm(le_ind_r, ri_ind_r, r_ind)
 
             if fwhm_r is None:
@@ -184,16 +176,19 @@ def process_subject(SUB_NUM, dat_path, hea_path, results_dir):
             # Fit Gaussian for each component
             # Use cycle_idx instead of cycle for assignments
             for comp, params in component_inds.items():
-                onset, offset = find_peak_boundaries(sig, peak_index=params[0], peak_height=params[1])
+                # Extract the start (onset), peak, and end (offset) indices using extract_peak_indices
+                start_index, end_index = extract_peak_indices(xs, sig, params)
 
-                ecg_output_dict[f'{comp}_on'][cycle_idx] = xs[onset] if onset is not None else np.nan
-                ecg_output_dict[f'{comp}_off'][cycle_idx] = xs[offset] if offset is not None else np.nan
+                # Assign the extracted indices to the ecg_output_dict
+                ecg_output_dict[f'{comp}_on'][cycle_idx] = xs[start_index] if not np.isnan(start_index) else np.nan
+                ecg_output_dict[f'{comp}_off'][cycle_idx] = xs[end_index] if not np.isnan(end_index) else np.nan
 
-                # Guess bandwidth and fit Gaussian
-                short_side = min(abs(params[0] - onset), abs(offset - params[0])) if onset is not None and offset is not None else 0
+                # Calculate the bandwidth and fit the Gaussian
+                short_side = min(abs(params[0] - start_index), abs(end_index - params[0])) if not np.isnan(start_index) and not np.isnan(end_index) else 0
                 fwhm = short_side * 2
                 guess_std = compute_gauss_std(fwhm)
 
+                # Store the Gaussian guess
                 guess = np.vstack((guess, (params[2], params[1], guess_std)))
 
             # Extract components and calculate bounds
@@ -228,8 +223,8 @@ def process_subject(SUB_NUM, dat_path, hea_path, results_dir):
 
             fit = gaussian_function(xs, *gaussian_params)
 
-            peak_params = find_peak_params(xs, sig, gaussian_params_reshape)
-            shape_params, peak_indices = calc_shape_params(xs, sig, peak_params)
+            peak_params = map_gaussian_to_signal_peaks(xs, sig, gaussian_params_reshape) #mapping gaussian to real signal
+            shape_params = calc_shape_params(xs, sig, peak_params)
 
             # Store shape parameters for each ECG component (P, Q, R, S, T)
             for i, comp in enumerate(['p', 'q', 'r', 's', 't']):
