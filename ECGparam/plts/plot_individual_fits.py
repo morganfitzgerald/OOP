@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plt_ecg_fit_with_components(cycle, epochs_df, ecg_output, fit, components=['p', 'q', 'r', 's', 't']):
+def plot_ecg_fit_with_components(cycle, epochs_df, ecg_output, fit, components=['p', 'q', 'r', 's', 't']):
     """
     Plot the original ECG signal, its Gaussian fit, and mark the on/off points for each ECG component.
 

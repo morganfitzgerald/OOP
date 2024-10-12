@@ -2,6 +2,9 @@
 from ECGparam.objs.fit import ECGparam  # Import your ECGparam class
 import os  # For handling file paths
 import numpy as np  # For numerical operations (loading ECG signal)
+import pandas as pd  # For handling DataFrames
+from ECGparam.plts import plot_epochs, plot_rpeaks  # Import plotting functions
+import neurokit2 as nk  # For processing the ECG signal
 
 # Define the path to the ECG data file (assuming the file is a NumPy array)
 ecg_data_path = '/Users/morganfitzgerald/Projects/ECG_tool_val/ECGparam/test_data/clean_ecgsim.npy'
@@ -25,6 +28,12 @@ try:
     # Run the ECG processing pipeline to extract features
     features = ecg_param.fit(ecg_signal, sampling_rate)
     
+    # Get the cleaned ECG signal and the detected peaks (P onsets, R peaks, etc.)
+    ecg_clean = ecg_param.ecg_clean
+    signals = ecg_param.nk_signals  # Assuming this contains the relevant signals
+
+    # Call the plot_aligned_ecg_cycles function to plot the ECG cycles aligned to P onsets
+    plot_epochs(signals, ecg_clean, sampling_rate, align_to='ECG_P_Onsets', pre_offset=200, post_offset=200)
 
 except Exception as e:
     # If there's an error, print the error message for debugging
@@ -35,9 +44,6 @@ output_file = os.path.join('/Users/morganfitzgerald/Projects/ECG_tool_val', 'ecg
 
 # Save the extracted features to a CSV file
 if features is not None:
-    # Ensure features are in a format that can be saved (i.e., DataFrame or dictionary)
-    import pandas as pd
-
     # Convert the features dictionary to a DataFrame for easy saving
     features_df = pd.DataFrame(features)
 

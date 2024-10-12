@@ -42,6 +42,6 @@ def extract_control_points(clean_ecg_sig, sampling_rate):
     rpeaks_cleaned = np.asarray(r_df_cleaned['x_vals'])
     
     # Delineate the QRS complex with the cleaned R peaks
-    waves, nk_signals = nk.ecg_delineate(clean_ecg_sig, rpeaks_cleaned, sampling_rate=sampling_rate)
+    _, nk_signals = nk.ecg_delineate(clean_ecg_sig, rpeaks_cleaned, sampling_rate=sampling_rate)
     
-    return waves, nk_signals
+    return nk_signals

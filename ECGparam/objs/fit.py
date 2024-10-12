@@ -142,7 +142,7 @@ class ECGparam(ECGBase):
         self.ecg_clean = nk.ecg_clean(self.filtered_signal, sampling_rate=self.fs)
 
         # Detect signals using NeuroKit2's peak detection method
-        _, self.nk_signals = extract_control_points(self.ecg_clean, sampling_rate=self.fs)
+        self.nk_signals = extract_control_points(self.ecg_clean, sampling_rate=self.fs)
 
         # Segment the ECG signal into individual cycles using the detected p-peaks
         # and filtered signal, and return the segmented cycles as a DataFrame
