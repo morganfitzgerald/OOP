@@ -1,12 +1,13 @@
 import numpy as np
 import logging
 from scipy.optimize import curve_fit
-from ..feature import calc_bounds  # Assuming calc_bounds is already in feature
-from ..processing import gaussian_function
+
+# Import your external calc_bounds function
+from .bounds import calc_bounds
+from .gaussian import gaussian_function
 
 logging.basicConfig(level=logging.DEBUG)  # Or use INFO for less verbosity
 logger = logging.getLogger(__name__)
-
 
 class GaussianFitter:
     """Class to handle Gaussian fitting for ECG component extraction."""
@@ -20,56 +21,58 @@ class GaussianFitter:
 
     def fit(self, xs, sig, guess):
         """
-        Perform Gaussian fitting on the ECG signal.
-        :param xs: Time indices of the signal.
-        :param sig: ECG signal to fit.
-        :param guess: Initial guesses for Gaussian parameters (center, height, std_dev).
-        :return: Fitted Gaussian parameters as a reshaped array.
+        Fit multiple Gaussians to the ECG signal.
+
+        Parameters
+        ----------
+        xs : np.array
+            X-axis values (time indices).
+        sig : np.array
+            The ECG signal to fit the Gaussian to.
+        guess : np.array
+            The initial guess for Gaussian parameters (center, height, width) for each component.
+        
+        Returns
+        -------
+        gaussian_params : np.array
+            Fitted Gaussian parameters (center, height, width) for each component.
         """
-        self._validate_inputs(xs, sig, guess)
-        #logger.debug(f"Initial guess for Gaussian fitting: {guess}")
-
-        bounds = self._calculate_gaussian_bounds(guess)
-        #logger.debug(f"Bounds for curve fitting: {bounds}")
-
         try:
-            # Perform the curve fitting with a maximum of 2500 iterations
-            gaussian_params, _ = curve_fit(gaussian_function, xs, sig, p0=guess.flatten(),
-                                           maxfev=2500, bounds=bounds)
-            return gaussian_params.reshape((5, 3))  # Reshape based on the number of components
-        except (ValueError, RuntimeError):
-            return np.zeros((len(guess), 3))  # Return zeros if fitting fails
+            # Define bounds based on the guess values
+            centers = np.array([guess[i][0] for i in range(5)])  # 5 components (P, Q, R, S, T)
+            heights = np.array([guess[i][1] for i in range(5)])
+            stds = np.array([guess[i][2] for i in range(5)])
 
-    def _calculate_gaussian_bounds(self, guess):
-        """
-        Calculate lower and upper bounds for the Gaussian parameters.
-        :param guess: Initial guess for Gaussian parameters (centers, heights, std_devs).
-        :return: Tuple of lower and upper bounds.
-        """
-        centers = np.array([g[0] for g in guess])  # Extract center positions
-        heights = np.array([g[1] for g in guess])  # Extract heights
-        stds = np.array([g[2] for g in guess])     # Extract standard deviations
+            # Use external calc_bounds function for bounds calculation
+            gaus_lo_bound, gaus_hi_bound = zip(
+                calc_bounds(centers[0], heights[0], stds[0], self.bound_factor),
+                calc_bounds(centers[1], heights[1], stds[1], self.bound_factor, flip_height=True),
+                calc_bounds(centers[2], heights[2], stds[2], self.bound_factor),
+                calc_bounds(centers[3], heights[3], stds[3], self.bound_factor, flip_height=True),
+                calc_bounds(centers[4], heights[4], stds[4], self.bound_factor)
+            )
 
-        bounds_lo, bounds_hi = [], []
-        for i, (center, height, std) in enumerate(zip(centers, heights, stds)):
-            flip_height = i in [1, 3]  # Assuming Q and S waves are negative
-            lo, hi = calc_bounds(center, height, std, self.bound_factor, flip_height=flip_height)
-            bounds_lo.append(lo)
-            bounds_hi.append(hi)
+            # Log the bounds to catch potential issues
+            logger.debug(f"Gaussian Parameters Guess: {guess}")
 
-        return np.concatenate(bounds_lo), np.concatenate(bounds_hi)
+            logger.debug(f"Lower bounds: {gaus_lo_bound}")
+            logger.debug(f"Upper bounds: {gaus_hi_bound}")
 
-    def _validate_inputs(self, xs, sig, guess):
-        """
-        Validate inputs for Gaussian fitting.
-        :param xs: Time indices.
-        :param sig: ECG signal.
-        :param guess: Initial guesses for Gaussian parameters.
-        :raises ValueError: If any input is invalid.
-        """
-        if xs.ndim != 1 or sig.ndim != 1:
-            raise ValueError("xs and sig must be 1-dimensional arrays.")
-        if len(xs) != len(sig):
-            raise ValueError("Time indices (xs) and signal (sig) must have the same length.")
-        if len(guess) == 0 or len(guess[0]) != 3:
-            raise ValueError("Each guess must be a list or array of 3 values (center, height, std).")
+            # Concatenate the bounds and reshape them
+            gaus_param_bounds = (np.concatenate(gaus_lo_bound), np.concatenate(gaus_hi_bound))
+            guess_flat = guess.flatten()
+
+            # Ensure the lower bound is strictly less than the upper bound
+            if np.any(np.array(gaus_param_bounds[0]) >= np.array(gaus_param_bounds[1])):
+                raise ValueError("Invalid bounds: lower bound must be strictly less than upper bound.")
+
+            # Perform Gaussian fitting with curve_fit
+            gaussian_params, _ = curve_fit(gaussian_function, xs, sig, p0=guess_flat, maxfev=2500, bounds=gaus_param_bounds)
+
+            # Reshape Gaussian parameters for 5 components (P, Q, R, S, T)
+            gaussian_params_reshape = gaussian_params.reshape((5, 3))
+
+            return gaussian_params_reshape
+
+        except Exception as e:
+            raise ValueError(f"Error in Gaussian fitting: {e}")

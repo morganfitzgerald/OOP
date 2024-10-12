@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import neurokit2 as nk
 
+
 def extract_control_points(clean_ecg_sig, sampling_rate):
     """
     Process an ECG signal to find and clean R peaks and delineate the QRS complex.

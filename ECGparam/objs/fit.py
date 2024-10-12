@@ -1,8 +1,7 @@
 import neurokit2 as nk
 
 # Import your custom functions
-from ..processing import (high_pass_filter, notch_filter, extract_control_points, epoch_cycles)
-from ..featureextract import extract_features
+from ..processing import (high_pass_filter, notch_filter, extract_control_points, epoch_cycles, extract_features)
 
 
 class ECGBase:
