@@ -7,7 +7,7 @@ from ECGparam.plts import plot_epochs, plot_rpeaks  # Import plotting functions
 import neurokit2 as nk  # For processing the ECG signal
 
 # Define the path to the ECG data file (assuming the file is a NumPy array)
-ecg_data_path = '/Users/morganfitzgerald/Projects/ECG_tool_val/ECGparam/test_data/clean_ecgsim.npy'
+ecg_data_path = '/Users/morganfitzgerald/Projects/ECGparam_oop/ECGparam/test_data/clean_ecgsim.npy'
 
 # Load the ECG data from the .npy file
 ecg_signal = np.load(ecg_data_path)
